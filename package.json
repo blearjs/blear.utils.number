@@ -1,6 +1,6 @@
 {
   "name": "blear.utils.number",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "number utils",
   "scripts": {
     "live": "browser-sync start --config bs-config.js",
