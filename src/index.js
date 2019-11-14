@@ -9,11 +9,7 @@ var reFormat = /(\d)(?=(\d{3})+$)/g;
 var ABBR_SUFFIX = ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'];
 var STR_62 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 var reEndZero =/((\.\d*[1-9])0+|\.0+)$/;
-var map62 = {};
 
-array.each(new Array(62), function (index) {
-    map62[STR_62[index]] = index;
-});
 
 /**
  * 整数化
@@ -21,7 +17,7 @@ array.each(new Array(62), function (index) {
  * @param [dftNum=0] {*} 当为 NaN 时的默认值
  * @returns {*}
  */
-exports.parseInt = function (num, dftNum) {
+var parseInt2 = exports.parseInt = function (num, dftNum) {
     dftNum = dftNum || 0;
     num = parseInt(num, 10);
 
@@ -35,7 +31,7 @@ exports.parseInt = function (num, dftNum) {
  * @param [dftNum=0] {*} 当为 NaN 时的默认值
  * @returns {*}
  */
-exports.parseFloat = function (num, dftNum) {
+var parseFloat2 = exports.parseFloat = function (num, dftNum) {
     dftNum = dftNum || 0;
     num = parseFloat(num);
 
@@ -78,7 +74,7 @@ var format = exports.format = function (num, separator) {
  */
 exports.abbr = function (num, fixedLength, maxLevel) {
     // 123.321 => 123
-    num = exports.parseFloat(num, 0);
+    num = parseFloat2(num, 0);
     fixedLength = fixedLength || 0;
 
     var step = 1000;
@@ -96,65 +92,22 @@ exports.abbr = function (num, fixedLength, maxLevel) {
     return format(num.toFixed(fixedLength)).replace(reEndZero, '$2') + ABBR_SUFFIX[i];
 };
 
-
-///**
-// * 比较两个长整型数值
-// * @param long1 {String|Number} 长整型数值字符串1
-// * @param long2 {String|Number} 长整型数值字符串2
-// * @param [operator=">"] {String} 比较操作符，默认比较 long1 > long2
-// * @returns {*}
-// * @example
-// * number.than('9999999999999999999999999999999999999999', '9999999999999999999999999999999999999998');
-// * // => true
-// */
-//exports.than = function (long1, long2, operator) {
-//    operator = operator || '>';
-//    long1 = String(long1).replace(REG_BEGIN_0, '');
-//    long2 = String(long2).replace(REG_BEGIN_0, '');
-//
-//    // 1. 比较长度
-//    if (long1.length > long2.length) {
-//        return operator === '>';
-//    } else if (long1.length < long2.length) {
-//        return operator === '<';
-//    }
-//
-//    // 15位是安全值
-//    var long1List = exports.format(long1, ',', 15).split(',');
-//    var long2List = exports.format(long2, ',', 15).split(',');
-//
-//    // 2. 遍历比较
-//    var ret = false;
-//
-//    long1List.forEach(function (number1, index) {
-//        var number2 = long2List[index];
-//
-//        if (number1 > number2) {
-//            ret = operator === '>';
-//            return false;
-//        } else if (number1 < number2) {
-//            ret = operator === '<';
-//            return false;
-//        }
-//    });
-//
-//    return ret;
-//};
-
-
 /**
- * 获取六十二进制数值
- * @param number10
+ * 十进制转换为任意进制字符串
+ * @param number10 {Number} 十进制数值，请自行保证在 14 位（含）以内
+ * @param [pool] {String} 进制池，默认为 62 进制
  * @returns {String}
  */
-exports.to62 = function (number10) {
+exports.toAny = function (number10, pool) {
     var ret = [];
+    pool = pool || STR_62;
+    var decimal = pool.length;
 
     var _cal = function () {
-        var y = number10 % 62;
+        var y = number10 % decimal;
 
-        number10 = exports.parseInt(number10 / 62);
-        ret.unshift(STR_62[y]);
+        number10 = parseInt2(number10 / decimal);
+        ret.unshift(pool[y]);
 
         if (number10) {
             _cal();
@@ -167,19 +120,27 @@ exports.to62 = function (number10) {
 
 
 /**
- * 六十二进制转换为十进制
- * @param number62
+ * 任意进制转换为十进制
+ * @param numberAny {String} 任意进制字符串，请自行保证转换后的十进制数值在 14 位（含）长度以内
+ * @param [pool] {String} 进制池，默认为 62 进制
  * @returns {number}
  */
-exports.from62 = function (number62) {
+exports.fromAny = function (numberAny, pool) {
     var ret = 0;
-    var len = number62.length;
+    var len = numberAny.length;
+    pool = pool || STR_62;
+    var decimal = pool.length;
+    var map = {};
+
+    array.each(new Array(62), function (index) {
+        map[pool[index]] = index;
+    });
 
     array.each(new Array(len), function (index) {
-        var pos62 = number62[index];
-        var pos10 = map62[pos62];
+        var pos = numberAny[index];
+        var pos10 = map[pos];
 
-        ret += pos10 * Math.pow(62, len - index - 1);
+        ret += pos10 * Math.pow(decimal, len - index - 1);
     });
 
     return ret;

@@ -66,12 +66,28 @@ describe('index.js', function () {
         done();
     });
 
-    it('.to62/.from62', function () {
-        var xyz = number.from62('xyz');
-        var ret = number.to62(xyz);
+    it('.toAny/.fromAny default', function () {
+        var ten = number.toAny(10);
+        expect(ten).toEqual('A');
 
-        console.log('xyz =>', ret);
+        var num10 = 1234567890;
+        var num62 = number.toAny(num10);
+        var num10_ = number.fromAny(num62);
 
-        expect(ret).toBe('xyz');
+        console.log(num62);
+        expect(num10).toEqual(num10_);
+    });
+
+    it('.toAny/.fromAny custom', function () {
+        var ten = number.toAny(3, '01');
+        expect(ten).toEqual('11');
+
+        var pool = '_=+[]<>()!@#$%^&*|\\":;';
+        var num10 = 1234567890;
+        var numAny = number.toAny(num10, pool);
+        var num10_ = number.fromAny(numAny, pool);
+
+        console.log(numAny);
+        expect(num10).toEqual(num10_);
     });
 });
