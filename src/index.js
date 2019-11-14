@@ -2,6 +2,8 @@
 
 var typeis = require('blear.utils.typeis');
 var array = require('blear.utils.array');
+var BigInt = require('./big-integer/BigInteger');
+
 
 var reFormat = /(\d)(?=(\d{3})+$)/g;
 // k,m,g,t,p
@@ -10,6 +12,7 @@ var ABBR_SUFFIX = ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'];
 var STR_62 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 var reEndZero =/((\.\d*[1-9])0+|\.0+)$/;
 
+exports.BigInt = BigInt;
 
 /**
  * 整数化
@@ -94,22 +97,21 @@ exports.abbr = function (num, fixedLength, maxLevel) {
 
 /**
  * 十进制转换为任意进制字符串
- * @param number10 {Number} 十进制数值，请自行保证在 14 位（含）以内
+ * @param number10 {String} 十进制数值或字符串，可以是任意长度，会使用大数进行计算
  * @param [pool] {String} 进制池，默认为 62 进制
  * @returns {String}
  */
 exports.toAny = function (number10, pool) {
-    var ret = [];
+    var bigInt = BigInt(number10);
     pool = pool || STR_62;
+    var ret = [];
     var decimal = pool.length;
-
     var _cal = function () {
-        var y = number10 % decimal;
-
-        number10 = parseInt2(number10 / decimal);
+        var y = bigInt.mod(decimal);
+        bigInt = bigInt.divide( decimal);
         ret.unshift(pool[y]);
 
-        if (number10) {
+        if (bigInt.gt(0)) {
             _cal();
         }
     };
@@ -121,12 +123,12 @@ exports.toAny = function (number10, pool) {
 
 /**
  * 任意进制转换为十进制
- * @param numberAny {String} 任意进制字符串，请自行保证转换后的十进制数值在 14 位（含）长度以内
+ * @param numberAny {String} 任意进制字符串
  * @param [pool] {String} 进制池，默认为 62 进制
- * @returns {number}
+ * @returns {String}
  */
 exports.fromAny = function (numberAny, pool) {
-    var ret = 0;
+    var bigInt = BigInt(0);
     var len = numberAny.length;
     pool = pool || STR_62;
     var decimal = pool.length;
@@ -140,8 +142,12 @@ exports.fromAny = function (numberAny, pool) {
         var pos = numberAny[index];
         var pos10 = map[pos];
 
-        ret += pos10 * Math.pow(decimal, len - index - 1);
+        bigInt = bigInt.add(
+            BigInt(pos10).multiply(
+                BigInt(decimal).pow(len - index - 1)
+            )
+        );
     });
 
-    return ret;
+    return bigInt.toString();
 };

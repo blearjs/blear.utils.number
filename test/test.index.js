@@ -75,7 +75,7 @@ describe('index.js', function () {
         var num10_ = number.fromAny(num62);
 
         console.log(num62);
-        expect(num10).toEqual(num10_);
+        expect(num10 + '').toEqual(num10_ + '');
     });
 
     it('.toAny/.fromAny custom', function () {
@@ -88,6 +88,6 @@ describe('index.js', function () {
         var num10_ = number.fromAny(numAny, pool);
 
         console.log(numAny);
-        expect(num10).toEqual(num10_);
+        expect(num10 + '').toEqual(num10_ + '');
     });
 });
